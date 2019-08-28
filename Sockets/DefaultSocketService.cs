@@ -43,9 +43,7 @@ namespace SimpleHttpServer.Sockets
 
     private byte[] MakeResponse(string content)
     {
-      byte[] contentBytes = Encoding.ASCII.GetBytes(content);
-      string response = string.Format("HTTP/1.0 200 OK\r\nContent-Type: text/html\r\nContent-Length: {0}\r\n\r\n\r\n" + content, contentBytes.Length);
-      return Encoding.ASCII.GetBytes(response);
+      return Encoding.ASCII.GetBytes("HTTP/1.0 200 OK\r\n\r\n" + content);
     }
   }
 }

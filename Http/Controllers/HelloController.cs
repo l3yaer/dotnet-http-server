@@ -9,7 +9,7 @@ namespace SimpleHttpServer.Http.Controllers
 
     public string Handle(HttpRequest request)
     {
-      return "<html><body>Hello world!</body></html>";
+      return "<!DOCTYPE html><html><body>Hello world!</body></html>";
     }
   }
 }

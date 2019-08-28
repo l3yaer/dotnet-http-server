@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace SimpleHttpServer
 {
@@ -6,7 +7,10 @@ namespace SimpleHttpServer
   {
     static void Main(string[] args)
     {
-      Console.WriteLine("Hello World!");
+      Sockets.DefaultSocketService service = new Sockets.DefaultSocketService();
+      Sockets.SocketServer server = new Sockets.SocketServer(8042, service);
+      server.Start();
+      Task.WaitAll(server.ServerTask);
     }
   }
 }

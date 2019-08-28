@@ -2,18 +2,20 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SimpleHttpServer.Sockets
 {
 
   public class SocketServer
   {
-    public bool Running { get; set; }
+    public bool Running { get; private set; }
+    public Task ServerTask { get; private set; }
     private readonly IPAddress ipAddress;
-    private TcpListener serverSocket;
+    private readonly TcpListener serverSocket;
     private readonly int port;
     private readonly SocketService service;
-    private readonly Thread thread;
+    public static ManualResetEvent allDone = new ManualResetEvent(false);
 
 
     public SocketServer(int port, SocketService service)
@@ -22,41 +24,31 @@ namespace SimpleHttpServer.Sockets
       ipAddress = ipHostInfo.AddressList[0];
       this.service = service;
       this.port = port;
-      ThreadStart threadDelegate = new ThreadStart(ConnectionHandler);
-      thread = new Thread(threadDelegate);
+      serverSocket = new TcpListener(IPAddress.Any, port);
     }
 
     public void Start()
     {
-      serverSocket = new TcpListener(ipAddress, port);
-      thread.Start();
-      Running = true;
+      Console.WriteLine("Servidor startado em: " + ipAddress + ":" + port);
+      ServerTask = Task.Run(ConnectionHandler);
     }
 
-    private void ConnectionHandler()
+    private async Task ConnectionHandler()
     {
-
-      try
+      serverSocket.Start();
+      Running = true;
+      while (Running)
       {
-        while (Running)
+        try
         {
-          TcpClient client = serverSocket.AcceptTcpClient();
-          Thread clientHandler = new Thread(new ParameterizedThreadStart((object obj) =>
-          {
-            TcpClient socket = (TcpClient)obj;
-            service.Serve(socket);
-          }));
-          clientHandler.Start();
+          TcpClient client = await serverSocket.AcceptTcpClientAsync().ConfigureAwait(false);
+          Task unawaited = Task.Run(() => { service.Serve(client); });
         }
-      }
-      catch (ThreadAbortException ex)
-      {
-        Console.WriteLine("Closing server. code: " + ex.ExceptionState);
-      }
-      catch (Exception e)
-      {
-        if (Running)
+        catch (Exception e)
+        {
           Console.WriteLine(e.StackTrace);
+        }
+
       }
     }
 
@@ -64,7 +56,7 @@ namespace SimpleHttpServer.Sockets
     {
       Running = false;
       serverSocket.Stop();
-      thread.Abort();
+      ServerTask.Dispose();
     }
   }
 }

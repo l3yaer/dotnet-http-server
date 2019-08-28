@@ -10,8 +10,8 @@ namespace SimpleHttpServer.Sockets
   {
     public bool Running { get; set; }
     private readonly IPAddress ipAddress;
-    private readonly IPEndPoint endPoint;
-    private Socket serverSocket;
+    private TcpListener serverSocket;
+    private readonly int port;
     private readonly SocketService service;
     private readonly Thread thread;
 
@@ -20,16 +20,15 @@ namespace SimpleHttpServer.Sockets
     {
       IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
       ipAddress = ipHostInfo.AddressList[0];
-      endPoint = new IPEndPoint(ipAddress, port);
       this.service = service;
+      this.port = port;
       ThreadStart threadDelegate = new ThreadStart(ConnectionHandler);
       thread = new Thread(threadDelegate);
     }
 
     public void Start()
     {
-      serverSocket = new Socket(ipAddress.AddressFamily,
-          SocketType.Stream, ProtocolType.Tcp);
+      serverSocket = new TcpListener(ipAddress, port);
       thread.Start();
       Running = true;
     }
@@ -39,19 +38,15 @@ namespace SimpleHttpServer.Sockets
 
       try
       {
-        serverSocket.Bind(endPoint);
-        serverSocket.Listen(100);
-
         while (Running)
         {
-          serverSocket.BeginAccept(
-              new AsyncCallback((IAsyncResult ar) =>
-              {
-
-                Socket socket = (Socket)ar.AsyncState;
-                service.Serve(socket);
-              }),
-              serverSocket);
+          TcpClient client = serverSocket.AcceptTcpClient();
+          Thread clientHandler = new Thread(new ParameterizedThreadStart((object obj) =>
+          {
+            TcpClient socket = (TcpClient)obj;
+            service.Serve(socket);
+          }));
+          clientHandler.Start();
         }
       }
       catch (ThreadAbortException ex)
@@ -68,7 +63,7 @@ namespace SimpleHttpServer.Sockets
     public void Stop()
     {
       Running = false;
-      serverSocket.Close();
+      serverSocket.Stop();
       thread.Abort();
     }
   }

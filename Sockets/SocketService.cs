@@ -5,6 +5,6 @@ namespace SimpleHttpServer.Sockets
 {
   public interface SocketService
   {
-    void Serve(Socket socket);
+    void Serve(TcpClient socket);
   }
 }

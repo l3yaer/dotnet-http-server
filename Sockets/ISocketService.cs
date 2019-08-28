@@ -3,7 +3,7 @@ using System.Net.Sockets;
 
 namespace SimpleHttpServer.Sockets
 {
-  public interface SocketService
+  public interface ISocketService
   {
     void Serve(TcpClient socket);
   }

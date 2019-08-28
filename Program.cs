@@ -7,7 +7,9 @@ namespace SimpleHttpServer
   {
     static void Main(string[] args)
     {
-      Sockets.DefaultSocketService service = new Sockets.DefaultSocketService();
+      Http.Router router = new Http.Router();
+      router.Add("", new Http.Controllers.HelloController());
+      Sockets.DefaultSocketService service = new Sockets.DefaultSocketService(router);
       Sockets.SocketServer server = new Sockets.SocketServer(8042, service);
       server.Start();
       Task.WaitAll(server.ServerTask);

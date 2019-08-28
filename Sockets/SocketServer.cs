@@ -14,11 +14,11 @@ namespace SimpleHttpServer.Sockets
     private readonly IPAddress ipAddress;
     private readonly TcpListener serverSocket;
     private readonly int port;
-    private readonly SocketService service;
+    private readonly ISocketService service;
     public static ManualResetEvent allDone = new ManualResetEvent(false);
 
 
-    public SocketServer(int port, SocketService service)
+    public SocketServer(int port, ISocketService service)
     {
       IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
       ipAddress = ipHostInfo.AddressList[0];
